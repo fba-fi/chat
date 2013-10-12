@@ -1,0 +1,163 @@
+
+/* SPLL-chat tyylit */
+
+/* Reset */
+* {
+    margin: 0;
+    padding: 0;
+}
+audio, canvas, video {
+        display: inline-block;
+        *display: inline;
+        *zoom: 1;
+}
+audio:not([controls]) { display: none; }
+[hidden] { display: none; }
+
+html,body {
+    width: 100%;
+    font-size: 1em; /* 16px */
+    /*overflow-y: scroll;*/
+    overflow-x: hidden;
+    -webkit-text-size-adjust: 100%;
+    -ms-text-size-adjust: 100%;
+}
+
+.formarea p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+body {
+    font-family: Verdana;
+    font-size: 0.75em;
+    /*color: #444;*/
+    background: #fff;
+    margin: 0;
+    padding: 0;
+}
+
+body { background: #fcfcfc; }
+
+/* wrapper */
+
+#wrapper {
+    width: 100%;
+}
+
+.halfwidth_right {
+    display: block;
+    width: 50%;
+    float: right;
+}
+.halfwidth {
+    display: block;
+    width: 50%;
+    float: left;
+}
+
+/* General */
+p { margin: 0.5em 0em 0.5em 0em; }
+a { text-decoration: none; color: #33c; }
+a:hover { text-decoration: underline; }
+h1 { font-size: 1.2em; }
+.clear { clear: both; }
+.rightalign { text-align: right; }
+
+/* Navi */
+#navi { border: solid #888; border-width: 0px 0px 0px 0px; display: block; padding: 0; background: #000; color: #888; }
+#navi a { display: inline-block; padding: 3px 5px 3px 5px; text-decoration: none; text-transform: uppercase; color: #eee; }
+#navi .selected { background: #FBF6E1; color: #000; }
+
+.logout {
+	position: absolute;
+	right: 0px;
+	top: 0px;
+}
+
+/* two column setup */
+.col_left { float:left; width: 49%; border: 0px solid red; }
+.col_right { float:left; width: 49%; border: 0px solid blue; }
+.col_left, .col_right { border-width: 0px }
+
+/* top container */
+#top_container { background: #fff };
+#top_container .col_right p { margin: 1em 0em 0.5em 0em; }
+
+/* Login */
+dl.login dt { display: block; float: left; width: 110px; clear: left; }
+dl.login dd { display: block; float: left; margin-left: 0; clear: right; }
+
+.button1 { background: #fff; border: 1px solid #888; padding: 2px 10px 2px 10px; }
+
+/* Sendform */
+#form_container { background: #FBF6E1; padding: 1em 1em 1em 1em; }
+#form_container .col_right { border: solid #aaa; border-width: 0px 0px 0px 0px;  padding: 0em 0em 0em 0em;    }
+.formlabel { display: inline-block; width: 10em; }
+
+p a.button { background: #fff; display: inline-block; color: #000; border: 1px solid #888; padding: 3px 10px 3px 10px; }
+p a.button:hover { background: #fff; color: #000; text-decoration: none; }
+
+p.refresh { margin-top: 1em; }
+#message { max-width: 90%; width: 350px; }
+
+/* Messages */
+#chat_container { padding: 0.7em 1em 1em 1em; border-top: 1px solid #aaa; }
+.message { margin-top: 0.5em; }
+.message .time, .message .username, .message .text { display: inline; }
+.message .username, .message .text { margin-left: 0.7em; }
+.message .time { color: #666; }
+.message .username { font-weight: bold; }
+
+a.message { color: #000; }
+a.message:hover { color: #666; text-decoration: none; }
+
+div.messageinfo {
+	display: none;
+	padding: 1em;
+}
+
+
+/* Tablet (portrait) */
+@media only screen and (min-width: 768px) and (max-width: 959px) {
+}
+
+/* Phone (portrait) */
+@media only screen and (max-width: 767px) {
+
+	#navi { width: 100%; }
+
+        .halfwidth, .halfwidth_right {
+            width: 100%;
+            float: left;
+	}
+
+        .rightalign {
+            text-align: left;
+        }
+
+        div.disclaimer {
+            display: none;
+        }
+
+	#chat_container { padding: 0.5em 0.2em 1em 0.2em; border-top: 1px solid #aaa; }
+	#form_container { padding: 0.2em; }
+	#message { max-width: 99%; width: 350px; height: 4em; }
+}
+
+
+/*
+    <!-- Style settings -->
+<!--
+    <style type="text/css" media="all">
+        html { font-size: 16px; }
+        h1, h2, h3, h4, h5, h6, dl dt, blockquote, blockquote blockquote blockquote, #site-title, #menu-primary li a { font-family: Abel, sans-serif; }
+        a, a:visited, .page-template-front .hfeed-more .hentry .entry-title a:hover, .entry-title a, .entry-title a:visited { color: #0b82a8; }
+        a:hover, .comment-meta a, .comment-meta a:visited, .page-template-front .hentry .entry-title a:hover, .archive .hentry .entry-title a:hover, .search .hentry .entry-title a:hover { border-color: #0b82a8; }
+        .read-more, .read-more:visited, .pagination a:hover, .comment-navigation a:hover, #respond #submit, .button, a.button, #subscribe #subbutton, .wpcf7-submit, #loginform .button-primary { background-color: #0b82a8; }
+        a:hover, a:focus { color: #000; }
+        .read-more:hover, #respond #submit:hover, .button:hover, a.button:hover, #subscribe #subbutton:hover, .wpcf7-submit:hover, #loginform .button-primary:hover { background-color: #111; }
+    </style>
+-->
+*/
+
