@@ -22,19 +22,9 @@ if (isset($_REQUEST["messageid"])) {
 }
 
 $messages = $db->getLatestMessages($messageid);
-
-$template = <<<EOT
-<a href='#' id='{message_id}' class='message'>
-{timestamp}<strong>{username}</strong></a><strong>:</strong> {text}
-<div class='messageinfo' id='messageinfo_{message_id}'></div>
-EOT;
-
-foreach ($messages as $message) {
-        $output = $template;
-        foreach ($message as $key => $value) {
-                $output = str_replace('{' . $key . '}', "$value", $output);
-        }
-        echo $output;
+foreach ($messages as $key => $value) {
+    unset($messages[$key]["client_ip"]);
 }
+print json_encode(array_reverse($messages));
 
 ?>

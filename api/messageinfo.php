@@ -16,8 +16,24 @@ if (!$db->exists()) {
     }
 }
 
+$client_ip = get_client_ip();
 $messageid = $_REQUEST["messageid"];
 
-print $db->getMessageInfo($messageid);
+$message = $db->findMessageWithID($messageid);
+
+$clientinfo = $db->getClientInfo($message["client_ip"]);
+$clientinfo["message_id"] = $messageid;
+
+$reports = $db->getReports($messageid);
+
+$clientinfo["reported_by_user"] = in_array($client_ip, $reports);
+$clientinfo["can_delete"] = $clientinfo["client_ip"] == $client_ip;
+
+$clientinfo["report_count"] = sizeof($reports);
+$clientinfo["reports"] = $reports;
+
+# unset($clientinfo["client_ip"]);
+
+print json_encode($clientinfo);
 
 ?>

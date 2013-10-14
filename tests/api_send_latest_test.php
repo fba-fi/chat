@@ -11,35 +11,42 @@ class TestAPI extends WebTestCase
 {
 
     private $latest_url = 'http://spll.fi/chat/api/latest.php';
+    private $latest_json_url = 'http://spll.fi/chat/api/latest_json.php';
     private $send_url = 'http://spll.fi/chat/api/send.php';
+    private $messageinfo_url = 'http://spll.fi/chat/api/messageinfo.php';
 
-    function setup() {
+    function setup()
+    {
         $this->delete_database();
     }
 
-    function teardown() {
+    function teardown()
+    {
         $this->delete_database();
     }
 
-    function delete_database() {
+    function delete_database()
+    {
         $dbdir = join_paths(dirname(__FILE__), '../data/chattestingdatabase');
         if (is_dir($dbdir)) {
             rmtree($dbdir);
         }
     }
 
-    function is_test_server() {
+    function is_test_server()
+    {
         return gethostname() == 'spll.fi';
     }
 
-    function test_readLatestHTML() {
+    function test_readLatestHTML()
+    {
 
-        print "Hostname: " . gethostname() . "<br/>";
+        print "Hostname: " . gethostname() . "<br/>\n";
         if (!$this->is_test_server()) {
-            print "Server tests: skipped";
+            print "Server tests: skipped\n";
             return;
         }
-        print "Server tests: included";
+        print "Server tests: included\n";
 
         $url = $this->latest_url;
         $this->assertTrue($this->get($url));
@@ -49,7 +56,18 @@ class TestAPI extends WebTestCase
         $this->assertText("Created new database: 'chattestingdatabase'");
     }
 
-    function test_send() {
+    function test_messageinfo()
+    {
+        if (!$this->is_test_server()) {
+            return;
+        }
+
+
+    }
+
+    function test_send()
+    {
+
         if (!$this->is_test_server()) {
             return;
         }
@@ -60,12 +78,12 @@ class TestAPI extends WebTestCase
 
         $send_url = $this->send_url;
         $username = 'test-user';
-        $message = 'testing sending message 001';
+        $messagetext = 'testing sending message 001';
 
         $parameters = array(
             'chatname' => 'chat-testing-database',
             'username' => $username,
-            'message' => $message
+            'message' => $messagetext
         );
 
         $this->assertTrue($this->post($send_url, $parameters));
@@ -74,13 +92,13 @@ class TestAPI extends WebTestCase
         $latest_url = $this->latest_url . '?chatname=chat-testing-database';
         $this->assertTrue($this->get($latest_url));
         $this->assertText($username);
-        $this->assertText($message);
+        $this->assertText($messagetext);
 
-        $message = 'second testing message';
+        $messagetext = 'second testing message';
         $parameters = array(
             'chatname' => 'chat-testing-database',
             'username' => $username,
-            'message' => $message
+            'message' => $messagetext
         );
 
         $this->assertTrue($this->post($send_url, $parameters));
@@ -89,7 +107,19 @@ class TestAPI extends WebTestCase
         $latest_url = $this->latest_url . '?chatname=chat-testing-database';
         $this->assertTrue($this->get($latest_url));
         $this->assertText($username);
-        $this->assertText($message);
+        $this->assertText($messagetext);
+
+        $latest_url = $this->latest_json_url . '?chatname=chat-testing-database';
+        $messages = json_decode($this->get($latest_url));
+        # $this->dump($messages);
+        foreach ($messages as $message) {
+            $this->assertTrue($username == $message->username);
+            $this->assertFalse(property_exists($message, 'client_ip'));
+            $this->assertPattern('/\w+/', $message->text);
+            $this->assertPattern('/\d+/', $message->client_id);
+            $this->assertPattern('/\w+/', $message->message_id);
+            $this->assertPattern('/\d+/', $message->timestamp);
+        }
 
     }
 }

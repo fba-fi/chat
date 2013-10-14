@@ -1,0 +1,7 @@
+Options +FollowSymLinks -MultiViews
+# Turn mod_rewrite on
+RewriteEngine On
+RewriteBase /chat
+
+RewriteRule	^(surf|kite)/?$ index.php?chatname=$1	[NC,L,QSA] 
+

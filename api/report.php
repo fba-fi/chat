@@ -16,8 +16,10 @@ if (!$db->exists()) {
     }
 }
 
-$messageid = $_REQUEST["messageid"];
+$messageid = $_POST["messageid"];
 
-print $db->reportMessage($messageid);
+$result = array();
+$result["reported"] = $db->saveReport($messageid);
+findprint json_encode($result);
 
 ?>

@@ -11,55 +11,86 @@ class DatabaseTextFile
     {
         $this->databaseDirectory = $databaseDirectory;
     }
-    function reportMessage($messageid)
+
+    function saveReport($messageid, $client_ip=null)
     {
-        $filename = $this->getReportFilename($messageid);
-        $lines = file($filename);
+        $filename = $this->getReportsFilename($messageid);
 
-        $client_ip = get_client_ip();
-
-        if (in_array($client_ip, $lines)) {
-            return "Viesti on jo ilmoitettu";
+        $lines = array();
+        if (is_file($filename)) {
+            $lines = file($filename);
         }
 
-        writeReportFile($messageid);
-        return "Viesti ilmoitettu asiattomaksi";
+        $client_ip = get_client_ip($client_ip);
+        if (in_array("$client_ip\n", $lines)) {
+            return False;
+        }
+
+        $this->writeReportFile($messageid, $client_ip);
+
+        return True;
     }
 
-    function saveMessage($username, $message)
+    function getReports($messageid)
+    {
+        $reports = array();
+        $filename = $this->getReportsFilename($messageid);
+        if (is_file($filename)) {
+            $lines = file($this->getReportsFilename($messageid));
+            foreach ($lines as $line) {
+                array_push($reports, chop($line));
+            }
+        }
+        return $reports;
+    }
+
+    function saveMessage($username, $message, $client_ip=null)
     {
         $timestamp = date('d.m H:i:s');
-        $message = $this->format_message($message);
-        $ip = get_client_ip();
+        $message = $this->formatMessage($message);
 
-        $line = "$ip#$timestamp <b>$username:</b> $message\n";
+        if (is_null($client_ip)) {
+            $client_ip = get_client_ip();
+        }
+
+        $line = "$client_ip#$timestamp <b>$username:</b> $message\n";
 
         $this->writeHistoryFile($line);
         $this->writeRecentFile($line);
-        $this->writeUserFile($username);
+        $this->writeClientFile($client_ip, $username);
     }
-
 
     function setup()
     {
-
-        $filenames = array(
-            $this->getUserFilename(),
-            $this->getRecentFilename(),
-            $this->getReportFilename('foo-bar-baz')
-        );
-
-        foreach ($filenames as $filename) {
-            $dir = dirname($filename);
+        $dirs = array('clients', 'messages', 'reports');
+        foreach ($dirs as $dir) {
+            $dir = join_paths($this->databaseDirectory, $dir);
             if (!is_dir($dir)) {
                 mkdir($dir, 0750, true);
             }
         }
-
         touch($this->getRecentFilename());
     }
 
-    function getLatestMessages($last_message_id)
+    function parseMessage($line)
+    {
+
+        $match = '/^(.*?)#(.*?) +<b> *(.*?):<\/b> (.*)$/';
+        if (!preg_match($match, $line, $matches)) {
+            return null;
+        }
+
+        return array(
+            "message_id" => sha1($line),
+            "client_ip" => $matches[1],
+            "client_id" => sha1($matches[1]),
+            "timestamp" => $matches[2],
+            "username" => $matches[3],
+            "text" => $matches[4]
+        );
+    }
+
+    function getLatestMessages($last_message_id=null)
     {
         $messages = array();
         $lines = file($this->getRecentFilename());
@@ -67,65 +98,52 @@ class DatabaseTextFile
         foreach ($lines as $line) {
 
             $message_id = sha1($line);
-
-            $match = '/^(.*?)#(.*?) +<b> *(.*?):<\/b> (.*)$/';
-            if (!preg_match($match, $line, $matches)) {
-                continue;
+            if ($last_message_id == $message_id) {
+                break;
             }
 
-            $client_id = sha1($matches[1]);
-            $timestamp = $matches[2];
-            $username = $matches[3];
-            $message_text = $matches[4];
-
-
-            $message = "<a href='#' id='$message_id' class='message'>";
-            $message .= "$timestamp <strong>$username</strong></a>";
-            $message .= "<strong>:</strong> $message_text<br/>\n";
-            $message .= "<div class='messageinfo' id='messageinfo_$message_id'></div>\n";
-
+            $message = $this->parseMessage($line);
             array_push($messages, $message);
         }
 
-        return implode(" ", $messages);
+        return $messages;
     }
 
-    function getMessageInfo($message_id)
+    function findMessageWithID($message_id)
     {
-
-        $message_info = array();
-
-        array_push($message_info, "Nimimerkit samasta IP-osoitteesta: ");
-
-        # Search message with $message_id from latest messages
         $lines = file($this->getRecentFilename());
-
-        $message = null;
-
         foreach ($lines as $line) {
             if ($message_id == sha1($line)) {
-                $message = $line;
-                break;
+                return $this->parseMessage($line);
             }
         }
+        return null;
+    }
 
-        if (!preg_match('/(.*?)#/', $message, $matches)) {
-            return "Message not found: " . $message_id;
-        }
-
-        $client_id = sha1($matches[1]);
-
-        # Print all usernames for client_id
-        $lines = file(join_paths(dirname($this->getUserFilename()), $client_id));
+    function getClientInfo($client_ip)
+    {
         $nicknames = array();
+        $client_id = sha1($client_ip);
+        $lines = file($this->getClientFilename($client_id));
+
         foreach ($lines as $line) {
             $username = preg_filter('/(.*)#/', '', $line);
             array_push($nicknames, chop($username));
         }
 
-        array_push($message_info, implode(', ', $nicknames));
+        $message_info = array(
+            "client_id" => $client_id,
+            "client_ip" => $client_ip,
+            "nicknames" => $nicknames
+        );
 
-        return implode("", $message_info);
+        return $message_info;
+    }
+
+    function getClientInfoWithMessageID($message_id)
+    {
+        $message = $this->findMessageWithID($message_id);
+        return $this->getClientInfo($message["client_ip"]);
     }
 
     function delete_latest_message($username)
@@ -160,7 +178,7 @@ class DatabaseTextFile
 
     /* Private functions */
 
-    function format_message($message)
+    function formatMessage($message)
     {
 
         $patterns = array(
@@ -194,22 +212,22 @@ class DatabaseTextFile
         return join_paths($this->databaseDirectory, "messages/$timestamp.histo.txt");
     }
 
-    function getUserFilename()
+    function getClientFilename($client_id)
     {
-        $client_id = sha1(get_client_ip());
-        return join_paths($this->databaseDirectory, "users/$client_id");
+        return join_paths($this->databaseDirectory, "clients", $client_id);
     }
 
-    function getReportFilename($messageid) {
-        return join_paths($this->databaseDirectory, "reports/$messageid");
+    function getReportsFilename($messageid)
+    {
+        return join_paths($this->databaseDirectory, "reports", $messageid);
     }
 
     /* File write operations */
 
-    function writeUserFile($username)
+    function writeClientFile($client_ip, $username)
     {
-        $filename = $this->getUserFilename();
-        $client_ip = get_client_ip();
+        $filename = $this->getClientFilename(sha1($client_ip));
+
         $user_info = "$client_ip#$username\n";
         $users = array();
 
@@ -230,26 +248,54 @@ class DatabaseTextFile
         file_put_contents($filename, $line, FILE_APPEND);
     }
 
-    function writeReportFile($messageid)
+    function writeReportFile($messageid, $client_ip)
     {
-        $filename = $this->getArchiveFilename();
-        file_put_contents($filename, $client_ip, FILE_APPEND);
+        $filename = $this->getReportsFilename($messageid);
+        file_put_contents($filename, "$client_ip\n", FILE_APPEND);
         return true;
     }
-
 
     function writeRecentFile($line)
     {
         $filename = $this->getRecentFilename();
-        $lines[] = $line;
-        if (file_exists($filename)) {
-            $lines_from_file = file($filename);
-            $lines_from_file = array_slice($lines_from_file, 0, 150, true);
-        }
-        $lines = array_merge($lines, $lines_from_file);
-        file_put_contents($filename, $lines);
-    }
+        $file = fopen($filename, 'c+');
 
+        # Wait until we get exclusive lock
+        if (!flock($file, LOCK_EX)) {
+            return -1;
+        }
+
+        # Append file data
+        $new_lines[] = $line;
+        $lines_from_file = null;
+        while (!feof($file)) {
+            $lines_from_file .= fread($file, 1024*1024);
+        }
+
+        # Split and limit to first 150 lines
+        $lines_from_file = split('\n', $lines_from_file);
+        $lines_from_file = array_slice($lines_from_file, 0, 150, true);
+        $lines_from_file = array_merge($new_lines, $lines_from_file);
+        $message_count = sizeof($lines_from_file);
+        $lines_from_file = join("", $lines_from_file);
+
+        #print "<pre>";
+        #print hex_dump($lines_from_file);
+        #print "</pre>";
+
+        # Write new data
+        ftruncate($file, 0);
+        rewind($file);
+        fwrite($file, $lines_from_file);
+
+        # Flush and release lock
+        fflush($file);
+        flock($file, LOCK_UN); 
+        fclose($file);
+
+        return $message_count;
+
+    }
 }
 
 ?>

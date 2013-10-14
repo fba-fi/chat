@@ -36,22 +36,20 @@ include dirname(__FILE__) . "/lib/auth/captcha.php";
             <a href="http://www.purjelautaliitto.fi/" target="_top">SPLL-ETUSIVU</a>
 
             <a  class="<? echo class_page_selected("surf") ?>"
-                href="index.php?chatname=surf"
+                href="/chat/surf"
                 target="_top">Purjelautailu</a>
 
             <a  class="<? echo class_page_selected("kite") ?>"
-                href="index.php?chatname=kite" 
+                href="/chat/kite" 
                 target="_top">Leijalautailu</a>
 
                 <div class="logout">
                     <?  if (auth_get_username()) { ?>
-                    <strong><? print auth_get_username() ?></strong>  - 
+                    <span class="username"><? print auth_get_username() ?></span>   
                     <a href="index.php?chatname=<? echo get_chatname() ?>&mode=logout">Logout</a>
                     <? } ?>
-
                 </div>
 
-                </p>
         </div>
 
         <div class="clear"></div>
@@ -93,12 +91,12 @@ include dirname(__FILE__) . "/lib/auth/captcha.php";
 
                 <form action="index.php" method="post" id="login">
 
-                        <p>Oikea vastaus on <? echo get_secret() ?>
+                        <p>Oikea vastaus bottivarmistukseen on <? echo get_secret() ?>
 
                         <dl class="login">
-                            <dt><label for="username">Käyttäjätunnus:</label></dt>
+                            <dt><label for="username">Nimimerkki:</label></dt>
                             <dd><input type="text" tabindex="1" name="username" id="username" size="25" value="<? echo auth_get_username() ?>" class="inputbox autowidth" /></dd>
-                            <dt><label for="password">Vastaa oikein:</label></dt>
+                            <dt><label for="password">Bottivarmistus:</label></dt>
                             <dd><input type="text" tabindex="2" id="password" name="password" size="25" value="" class="inputbox autowidth" /></dd>
                             <dt><label>&nbsp;</label></dt>
                             <dd><input type="submit" name="login" tabindex="6" value="Kirjaudu sisään" class="button1" /></dd>
